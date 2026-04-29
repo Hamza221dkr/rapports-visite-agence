@@ -187,7 +187,10 @@
                 <input type="password" id="apiKey" placeholder="sk-proj-…" autocomplete="off"/>
                 <button class="btn-eye" id="eyeBtn" onclick="toggleKeyVisibility()" title="Afficher/masquer">👁</button>
               </div>
-              <div class="key-hint">Votre clé reste locale, elle n'est jamais stockée.</div>
+              <div class="key-hint">Votre clé reste locale — elle est sauvegardée dans votre navigateur.</div>
+              <div class="key-hint saved-key-hint" id="savedKeyHint" style="display:none">
+                ✅ Clé mémorisée — <button class="btn-link" onclick="forgetApiKey()">Oublier</button>
+              </div>
             </div>
           </div>
         </div>

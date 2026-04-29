@@ -82,6 +82,9 @@ main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:2
 .btn-eye{background:none;border:1.5px solid var(--gray-2);border-radius:var(--radius-sm);padding:.5rem .6rem;cursor:pointer;font-size:.95rem;transition:background var(--tr)}
 .btn-eye:hover{background:var(--gray-2)}
 .key-hint{font-size:.74rem;color:var(--gray-3);margin-top:.35rem}
+.saved-key-hint{color:var(--green);font-weight:500}
+.btn-link{background:none;border:none;color:var(--red);font-size:.74rem;cursor:pointer;padding:0;text-decoration:underline}
+.btn-link:hover{opacity:.75}
 
 /* ── Boutons ── */
 .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.3rem;border-radius:var(--radius-sm);border:none;cursor:pointer;font-size:.9rem;font-weight:600;transition:all var(--tr);white-space:nowrap}

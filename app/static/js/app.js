@@ -2,6 +2,14 @@ let currentFile = null, downloadUrl = null, downloadName = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("dateVisite").value = new Date().toISOString().split("T")[0];
+
+  // Restore saved API key from localStorage
+  const savedKey = localStorage.getItem("openai_api_key");
+  if (savedKey) {
+    document.getElementById("apiKey").value = savedKey;
+    document.getElementById("savedKeyHint").style.display = "block";
+  }
+
   const zone = document.getElementById("dropZone");
   zone.addEventListener("dragover",  e => { e.preventDefault(); zone.classList.add("dragover"); });
   zone.addEventListener("dragleave", ()  => zone.classList.remove("dragover"));
@@ -90,6 +98,12 @@ function toggleKeyVisibility() {
   input.type = input.type === "password" ? "text" : "password";
 }
 
+function forgetApiKey() {
+  localStorage.removeItem("openai_api_key");
+  document.getElementById("apiKey").value = "";
+  document.getElementById("savedKeyHint").style.display = "none";
+}
+
 async function generate() {
   const selected = [...document.querySelectorAll(".agency-chip input:checked")].map(cb => cb.value);
   if (!currentFile) { showError("Veuillez d'abord charger un fichier Excel."); return; }
@@ -103,6 +117,12 @@ async function generate() {
   const consol    = document.getElementById("consolidatedCheck").checked;
 
   if (useGpt && !apiKey) { showError("Veuillez saisir votre clé API OpenAI pour activer l'analyse IA."); return; }
+
+  // Save key to localStorage if provided
+  if (useGpt && apiKey) {
+    localStorage.setItem("openai_api_key", apiKey);
+    document.getElementById("savedKeyHint").style.display = "block";
+  }
 
   // Show loader
   document.getElementById("optionsBlock").style.display = "none";
