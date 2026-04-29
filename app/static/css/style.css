@@ -123,4 +123,31 @@ main{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:2
 .error-icon{font-size:1.8rem}.error-text{font-size:.9rem;color:var(--red);font-weight:500}
 
 /* ── Footer ── */
-footer{text-align:center;padding:1rem;font-size:.75rem;color:var(--gray-3);border-top:1px solid var(--gray-2);background:var(--white)}
+footer{text-align:center;padding:.8rem 1rem;font-size:.75rem;color:var(--gray-3);border-top:1px solid var(--gray-2);background:var(--white)}
+.footer-copy{margin-top:.25rem;font-size:.7rem;color:var(--gray-3);opacity:.8}
+
+/* ── Help button ── */
+.header-right{display:flex;align-items:center;gap:.8rem}
+.help-btn{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:var(--white);font-size:.95rem;font-weight:700;cursor:pointer;transition:background var(--tr);flex-shrink:0}
+.help-btn:hover{background:rgba(255,255,255,.28)}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-box{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:620px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;background:var(--blue-dark);color:var(--white);flex-shrink:0}
+.modal-title{font-size:1rem;font-weight:700}
+.modal-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:1.1rem;cursor:pointer;padding:2px 6px;border-radius:4px;transition:color var(--tr)}
+.modal-close:hover{color:var(--white)}
+.modal-body{overflow-y:auto;padding:1.3rem 1.4rem;display:flex;flex-direction:column;gap:1.2rem}
+.modal-section{border-left:3px solid var(--blue-light);padding-left:.9rem}
+.modal-step-title{display:flex;align-items:center;gap:.55rem;font-size:.92rem;font-weight:700;color:var(--blue-dark);margin-bottom:.55rem}
+.modal-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue-mid);color:var(--white);font-size:.75rem;font-weight:700;flex-shrink:0}
+.modal-section p{font-size:.85rem;color:var(--gray-4);line-height:1.5}
+.modal-section code{background:var(--gray-1);border:1px solid var(--gray-2);border-radius:4px;padding:1px 5px;font-size:.82rem}
+.help-table{width:100%;border-collapse:collapse;margin-top:.6rem;font-size:.8rem}
+.help-table th{background:var(--blue-dark);color:var(--white);padding:.4rem .7rem;text-align:left;font-weight:600}
+.help-table td{padding:.38rem .7rem;border-bottom:1px solid var(--gray-2);color:var(--gray-4)}
+.help-table tr:last-child td{border-bottom:none}
+.help-table tr:nth-child(even) td{background:var(--gray-1)}
+.faq-item{font-size:.82rem;color:var(--gray-4);line-height:1.5;margin-bottom:.6rem;padding:.6rem .8rem;background:var(--gray-1);border-radius:var(--radius-sm)}
+.faq-item:last-child{margin-bottom:0}

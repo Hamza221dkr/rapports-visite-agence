@@ -17,11 +17,80 @@
         <div class="logo-sub">Comptes Rendus Agence — Analyse IA intégrée</div>
       </div>
     </div>
-    <div class="header-badge" id="gptBadge" style="display:none">
-      <span class="badge-dot"></span> IA activée
+    <div class="header-right">
+      <div class="header-badge" id="gptBadge" style="display:none">
+        <span class="badge-dot"></span> IA activée
+      </div>
+      <button class="help-btn" onclick="document.getElementById('helpModal').style.display='flex'" title="Guide d'utilisation">?</button>
     </div>
   </div>
 </header>
+
+<!-- Modal d'aide -->
+<div class="modal-overlay" id="helpModal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">📖 Guide d'utilisation</div>
+      <button class="modal-close" onclick="document.getElementById('helpModal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="modal-section">
+        <div class="modal-step-title"><span class="modal-badge">1</span> Charger le fichier Excel</div>
+        <p>Glissez votre fichier <strong>.xlsx</strong> dans la zone ou cliquez sur <em>Choisir un fichier</em>. Chaque feuille du classeur correspond à une agence visitée.</p>
+        <table class="help-table">
+          <thead><tr><th>Colonne</th><th>Contenu</th></tr></thead>
+          <tbody>
+            <tr><td>A</td><td>Thématique (FONCTIONNEMENT, QUALITE…)</td></tr>
+            <tr><td>B</td><td>Question / Critère évalué</td></tr>
+            <tr><td>C</td><td>Scoring (Bon / Acceptable / À améliorer)</td></tr>
+            <tr><td>D</td><td>Note</td></tr>
+            <tr><td>E</td><td>Observation / Recommandation</td></tr>
+            <tr><td>F</td><td>Responsable (CA, RMG, DR, INFORMATIQUE…)</td></tr>
+            <tr><td>G</td><td>Note thématique</td></tr>
+            <tr><td>H</td><td>Note globale</td></tr>
+            <tr><td>I</td><td>Appréciation globale</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-step-title"><span class="modal-badge">2</span> Informations de la visite</div>
+        <p>Saisissez le <strong>nom du Responsable de Zone</strong> et la <strong>date de visite</strong>. Ces informations apparaîtront dans l'en-tête de chaque rapport.</p>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-step-title"><span class="modal-badge">3</span> Sélectionner les agences</div>
+        <p>Les agences détectées dans le fichier s'affichent automatiquement. Cochez celles pour lesquelles vous souhaitez générer un rapport. Utilisez <em>Tout sélectionner</em> pour cocher toutes les agences d'un coup.</p>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-step-title"><span class="modal-badge">4</span> Options du rapport</div>
+        <p><strong>Rapport consolidé</strong> — Synthèse comparative de toutes les agences sélectionnées : tableau des scores, classement, points communs et plan d'actions de zone. Nécessite au minimum 2 agences.</p>
+        <p style="margin-top:.5rem"><strong>Analyse IA (ChatGPT)</strong> — Enrichit les conclusions avec une appréciation générale rédigée par GPT-4o-mini. Nécessite une clé API OpenAI valide (commence par <code>sk-</code>). Sans clé valide, le rapport est généré normalement sans IA.</p>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-step-title"><span class="modal-badge">5</span> Générer et télécharger</div>
+        <table class="help-table">
+          <thead><tr><th>Sélection</th><th>Fichier téléchargé</th></tr></thead>
+          <tbody>
+            <tr><td>1 agence, sans consolidé</td><td>Synthese_CR_AGENCE.docx</td></tr>
+            <tr><td>Plusieurs agences ou consolidé</td><td>Rapports_Visite_Agences.zip</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-section">
+        <div class="modal-step-title">❓ Questions fréquentes</div>
+        <div class="faq-item"><strong>Mon fichier n'est pas reconnu ?</strong><br>Vérifiez que le fichier est au format <code>.xlsx</code> et que les données commencent à la ligne 2 (ligne 1 = en-têtes).</div>
+        <div class="faq-item"><strong>Certaines agences n'apparaissent pas ?</strong><br>Les feuilles vides sont ignorées. Vérifiez que chaque feuille contient des lignes de données.</div>
+        <div class="faq-item"><strong>L'application est lente au premier accès ?</strong><br>Le serveur se met en veille après 15 min d'inactivité. Le premier chargement peut prendre jusqu'à 50 secondes — c'est normal.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <main>
   <div class="card">
@@ -167,6 +236,7 @@
 
 <footer>
   <p>Outil interne — Génération automatique de comptes rendus de visite agence · Analyse IA optionnelle</p>
+  <p class="footer-copy">© Hamza Solutions 2026</p>
 </footer>
 
 <script src="/static/js/app.js"></script>
