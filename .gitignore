@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+*.xlsx
+*.xls
+# Rapports générés (ne pas committer)
+Synthese_CR_*.docx
+Rapports_*.docx
+Rapport_CONSOLIDE_*.docx
+venv/
+.venv/
+.DS_Store
+generate_synthese.py

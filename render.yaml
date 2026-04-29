@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: rapports-visite-agence
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --chdir app server:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false          # à saisir manuellement dans le dashboard Render
+      - key: FLASK_ENV
+        value: production
+    plan: free

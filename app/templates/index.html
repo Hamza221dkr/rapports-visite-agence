@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Générateur de Rapports — Visite Agence</title>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🏦</div>
+      <div>
+        <div class="logo-title">Générateur de Rapports de Visite</div>
+        <div class="logo-sub">Comptes Rendus Agence — Analyse IA intégrée</div>
+      </div>
+    </div>
+    <div class="header-badge" id="gptBadge" style="display:none">
+      <span class="badge-dot"></span> IA activée
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+
+    <!-- Étape 1 : Fichier -->
+    <div class="step-header">
+      <span class="step-badge">1</span>
+      <span>Charger le fichier Excel d'évaluation</span>
+    </div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">📊</div>
+      <div class="drop-text">Glissez votre fichier Excel ici</div>
+      <div class="drop-sub">ou cliquez pour parcourir (.xlsx / .xls)</div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" hidden/>
+      <button class="btn btn-outline" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+        Choisir un fichier
+      </button>
+    </div>
+
+    <div class="file-info" id="fileInfo" style="display:none">
+      <span class="file-icon">📄</span>
+      <span id="fileName"></span>
+      <button class="btn-icon" onclick="resetFile()" title="Supprimer">✕</button>
+    </div>
+
+    <div id="optionsBlock" style="display:none">
+
+      <!-- Étape 2 : Infos visite -->
+      <div class="step-header">
+        <span class="step-badge">2</span>
+        <span>Informations de la visite</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="rzName">Responsable de Zone</label>
+          <input type="text" id="rzName" placeholder="Nom complet du Responsable de Zone"/>
+        </div>
+        <div class="form-group">
+          <label for="dateVisite">Date de visite</label>
+          <input type="date" id="dateVisite"/>
+        </div>
+      </div>
+
+      <!-- Étape 3 : Agences -->
+      <div class="step-header">
+        <span class="step-badge">3</span>
+        <span>Sélectionner les agences</span>
+      </div>
+      <div class="agencies-bar">
+        <button class="btn btn-sm btn-outline" onclick="toggleAll(true)">Tout sélectionner</button>
+        <button class="btn btn-sm btn-outline" onclick="toggleAll(false)">Tout désélectionner</button>
+      </div>
+      <div class="agencies-grid" id="agenciesGrid"></div>
+
+      <!-- Étape 4 : Options rapport -->
+      <div class="step-header">
+        <span class="step-badge">4</span>
+        <span>Options du rapport</span>
+      </div>
+
+      <div class="options-grid">
+
+        <!-- Rapport consolidé -->
+        <div class="option-card" id="consolidatedCard">
+          <div class="option-header">
+            <label class="toggle-label">
+              <input type="checkbox" id="consolidatedCheck" onchange="updateHint()"/>
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <div class="option-title">📋 Rapport consolidé toutes agences</div>
+              <div class="option-desc">Tableau comparatif, points communs, plan d'actions de zone</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analyse IA (ChatGPT) -->
+        <div class="option-card" id="gptCard">
+          <div class="option-header">
+            <label class="toggle-label">
+              <input type="checkbox" id="gptCheck" onchange="toggleGptKey()"/>
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <div class="option-title">🤖 Analyse IA (ChatGPT)</div>
+              <div class="option-desc">Conclusions et appréciations générées par GPT-4o-mini</div>
+            </div>
+          </div>
+          <div class="gpt-key-block" id="gptKeyBlock" style="display:none">
+            <div class="form-group" style="margin-top:.7rem">
+              <label for="apiKey">Clé API OpenAI</label>
+              <div class="key-input-row">
+                <input type="password" id="apiKey" placeholder="sk-proj-…" autocomplete="off"/>
+                <button class="btn-eye" id="eyeBtn" onclick="toggleKeyVisibility()" title="Afficher/masquer">👁</button>
+              </div>
+              <div class="key-hint">Votre clé reste locale, elle n'est jamais stockée.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Étape 5 : Générer -->
+      <div class="step-header">
+        <span class="step-badge">5</span>
+        <span>Générer les rapports</span>
+      </div>
+
+      <div class="generate-row">
+        <button class="btn btn-primary" onclick="generate()">
+          📝&nbsp; Générer les rapports Word
+        </button>
+        <span class="generate-hint" id="generateHint"></span>
+      </div>
+
+    </div><!-- /optionsBlock -->
+
+    <!-- Loader -->
+    <div class="loader-block" id="loaderBlock" style="display:none">
+      <div class="spinner"></div>
+      <div class="loader-text" id="loaderText">Génération en cours…</div>
+      <div class="loader-sub" id="loaderSub"></div>
+    </div>
+
+    <!-- Résultat -->
+    <div class="result-block" id="resultBlock" style="display:none">
+      <div class="result-icon">✅</div>
+      <div class="result-text" id="resultText"></div>
+      <button class="btn btn-success" id="downloadBtn">⬇&nbsp; Télécharger</button>
+      <button class="btn btn-outline" onclick="resetAll()">Nouveau fichier</button>
+    </div>
+
+    <!-- Erreur -->
+    <div class="error-block" id="errorBlock" style="display:none">
+      <div class="error-icon">⚠️</div>
+      <div class="error-text" id="errorText"></div>
+      <button class="btn btn-outline" onclick="document.getElementById('errorBlock').style.display='none'">Fermer</button>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <p>Outil interne — Génération automatique de comptes rendus de visite agence · Analyse IA optionnelle</p>
+</footer>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
