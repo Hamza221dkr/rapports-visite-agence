@@ -2,13 +2,11 @@
 Module d'intégration OpenAI GPT — génère des analyses enrichies pour les rapports.
 """
 
-import os
 
 def get_gpt_fn(api_key: str):
     """Retourne une fonction GPT si la clé est valide, sinon None."""
     if not api_key or not api_key.strip().startswith("sk-"):
         return None
-
     try:
         from openai import OpenAI
         client = OpenAI(api_key=api_key.strip())
@@ -25,95 +23,104 @@ def get_gpt_fn(api_key: str):
     return gpt_fn
 
 
-def _build_agency_summary(agency_name, thematiques, note_globale, notation_globale) -> str:
-    """Construit un résumé textuel de l'agence pour le prompt GPT."""
-    lines = [f"Agence : {agency_name}",
-             f"Note globale : {note_globale:.2f}/3 ({notation_globale})" if note_globale else ""]
+# ── Prompt système commun ───────────────────────────────────────────────────
 
-    THEME_MAP_SHORT = {
-        "FONCTIONNEMENT": "Fonctionnement agence", "QUALITE": "Qualité de service",
-        "ENVIRONNEMENT": "Sécurité & Risques", "ORGANISATION": "Organisation commerciale",
-        "PERFORMANCES": "Performance", "MANAGEMENT": "Management",
+SYSTEM_PROMPT = """Tu es un expert bancaire senior spécialisé dans l'audit et le contrôle des agences.
+Tu rédiges des comptes rendus de visite officiels pour une Direction Régionale.
+
+RÈGLES ABSOLUES — à respecter sans exception :
+- Rédige uniquement en français, texte courant, style professionnel et direct.
+- INTERDIT : markdown, astérisques, dièses, tirets de liste, numérotation, sous-titres.
+- INTERDIT : toute phrase d'introduction du type "Voici l'appréciation" ou "En conclusion,".
+- INTERDIT : répéter les données brutes (notes chiffrées, listes de critères).
+- Commence directement par le contenu, sans formule introductive.
+- Chaque paragraphe est séparé par un saut de ligne. Aucun autre formatage."""
+
+
+# ── Helpers ─────────────────────────────────────────────────────────────────
+
+def _build_agency_summary(agency_name, thematiques, note_globale, notation_globale) -> str:
+    THEME_MAP = {
+        "FONCTIONNEMENT": "Fonctionnement agence",
+        "QUALITE":        "Qualité de service",
+        "ENVIRONNEMENT":  "Sécurité & Risques opérationnels",
+        "ORGANISATION":   "Organisation du travail",
+        "PERFORMANCES":   "Performance Commerciale",
+        "MANAGEMENT":     "Management & Leadership",
     }
+    lines = [f"Agence : {agency_name}"]
+    if note_globale:
+        lines.append(f"Appréciation globale : {notation_globale} ({note_globale:.2f}/3)")
 
     for theme_raw, data in thematiques.items():
-        key = next((k for k in THEME_MAP_SHORT if k in theme_raw.upper()), theme_raw)
-        label = THEME_MAP_SHORT.get(key, theme_raw)
-        note = data.get("note")
-        note_str = f"{note:.2f}" if note else "—"
-        lines.append(f"\n[{label} — {note_str}/3]")
+        key   = next((k for k in THEME_MAP if k in theme_raw.upper()), theme_raw)
+        label = THEME_MAP.get(key, theme_raw)
+        note  = data.get("note")
+        lines.append(f"\n{label} — {f'{note:.2f}/3' if note else 'non noté'}")
         for q in data["questions"]:
             if q["scoring"] in ("À améliorer", "Bon") or q["obs"]:
-                lines.append(f"  • [{q['scoring']}] {q['question'][:80]}")
+                lines.append(f"  [{q['scoring']}] {q['question'][:90]}")
                 if q["obs"] and q["scoring"] == "À améliorer":
-                    lines.append(f"    → {q['obs'][:120]}")
+                    lines.append(f"    Observation : {q['obs'][:150]}")
     return "\n".join(lines)
 
 
-def _analyze_individual(client, agency_name, thematiques, note_globale, notation_globale) -> str:
-    """Génère une conclusion enrichie pour un rapport individuel."""
+def _call(client, system: str, user: str, max_tokens: int) -> str | None:
+    try:
+        r = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user",   "content": user},
+            ],
+            max_tokens=max_tokens,
+            temperature=0.5,
+        )
+        return r.choices[0].message.content.strip()
+    except Exception:
+        return None
+
+
+# ── Rapport individuel ───────────────────────────────────────────────────────
+
+def _analyze_individual(client, agency_name, thematiques, note_globale, notation_globale) -> str | None:
     summary = _build_agency_summary(agency_name, thematiques, note_globale, notation_globale)
 
-    prompt = f"""Tu es un expert bancaire chargé de rédiger des comptes rendus de visite d'agences.
-Voici les données de visite de l'agence {agency_name} :
+    user_prompt = f"""Données de la visite de l'agence {agency_name} :
 
 {summary}
 
-Rédige une appréciation générale professionnelle et synthétique (3 à 4 paragraphes) qui :
-1. Donne une appréciation globale du niveau de fonctionnement de l'agence
-2. Met en valeur les points forts observés
-3. Souligne les axes d'amélioration prioritaires avec des recommandations concrètes
-4. Conclut avec une perspective motivante pour les équipes
+Rédige une appréciation générale en 3 paragraphes :
+- Paragraphe 1 : bilan global du fonctionnement de l'agence, niveau de maîtrise des thématiques.
+- Paragraphe 2 : points forts constatés et axes d'amélioration prioritaires avec recommandations concrètes.
+- Paragraphe 3 : message de conclusion engageant pour l'équipe, avec les prochaines attentes.
 
-Style : professionnel, bienveillant mais direct. En français. Sans bullet points, uniquement du texte rédigé."""
+Longueur : 150 à 220 mots. Texte continu, aucun formatage."""
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=600,
-            temperature=0.7,
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return None
+    return _call(client, SYSTEM_PROMPT, user_prompt, max_tokens=400)
 
 
-def _analyze_consolidated(client, all_agencies: list) -> str:
-    """Génère une synthèse consolidée pour le rapport de zone."""
-    summaries = []
-    for ag in all_agencies:
-        summaries.append(_build_agency_summary(
-            ag["name"], ag["thematiques"], ag.get("note_globale"), ag.get("notation_globale")
-        ))
+# ── Rapport consolidé ────────────────────────────────────────────────────────
 
-    combined = "\n\n---\n\n".join(summaries)
+def _analyze_consolidated(client, all_agencies: list) -> str | None:
+    summaries = "\n\n---\n\n".join(
+        _build_agency_summary(ag["name"], ag["thematiques"], ag.get("note_globale"), ag.get("notation_globale"))
+        for ag in all_agencies
+    )
     avg = sum(ag.get("note_globale") or 0 for ag in all_agencies) / max(len(all_agencies), 1)
+    names = ", ".join(ag["name"] for ag in all_agencies)
 
-    prompt = f"""Tu es un Responsable de Zone bancaire qui rédige le rapport de synthèse après une tournée de visite de {len(all_agencies)} agences.
-
-Voici les données de toutes les agences visitées :
-
-{combined}
-
+    user_prompt = f"""Données de la tournée de visite — {len(all_agencies)} agences : {names}
 Note moyenne de zone : {avg:.2f}/3
 
-Rédige une appréciation générale de zone (4 à 5 paragraphes) qui :
-1. Présente le bilan global de la tournée avec la note moyenne de zone
-2. Identifie les agences performantes et celles qui nécessitent un suivi prioritaire
-3. Met en exergue les problématiques transversales communes à plusieurs agences
-4. Formule des recommandations stratégiques adressées à la Direction Régionale et aux entités support
-5. Fixe des objectifs et un cadre de suivi pour les prochaines semaines
+{summaries}
 
-Style : managérial, structuré, orienté résultats. En français. Texte rédigé, pas de bullet points."""
+Rédige une appréciation générale de zone en 4 paragraphes :
+- Paragraphe 1 : bilan de la tournée, note moyenne, tendance générale de la zone.
+- Paragraphe 2 : agences performantes et agences nécessitant un accompagnement prioritaire.
+- Paragraphe 3 : problématiques transversales communes, vigilances partagées.
+- Paragraphe 4 : recommandations stratégiques pour la Direction Régionale et les entités support, objectifs pour les prochaines semaines.
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=800,
-            temperature=0.7,
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return None
+Longueur : 200 à 280 mots. Texte continu, aucun formatage."""
+
+    return _call(client, SYSTEM_PROMPT, user_prompt, max_tokens=550)
